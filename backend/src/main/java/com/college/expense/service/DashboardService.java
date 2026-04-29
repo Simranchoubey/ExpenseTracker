@@ -30,16 +30,18 @@ public class DashboardService {
         dto.setYear(year);
 
         // Total income and expense this month
-        BigDecimal income = txRepo.sumByTypeAndMonth(TransactionType.INCOME, month, year);
-        BigDecimal expense = txRepo.sumByTypeAndMonth(TransactionType.EXPENSE, month, year);
-        dto.setTotalIncome(income);
-        dto.setTotalExpense(expense);
-        dto.setBalance(income.subtract(expense));
+    BigDecimal income = Optional.ofNullable(txRepo.sumByTypeAndMonth(TransactionType.INCOME, month, year)).orElse(BigDecimal.ZERO);
+    BigDecimal expense = Optional.ofNullable(txRepo.sumByTypeAndMonth(TransactionType.EXPENSE, month, year)).orElse(BigDecimal.ZERO);
+    dto.setTotalIncome(income);
+    dto.setTotalExpense(expense);
+    dto.setBalance(income.subtract(expense));
 
         // Category breakdown (expenses only)
         Map<String, BigDecimal> breakdown = new LinkedHashMap<>();
         for (Object[] row : txRepo.findSpendingByCategory(month, year)) {
-            breakdown.put((String) row[0], (BigDecimal) row[1]);
+            String cat = (String) row[0];
+            BigDecimal val = (BigDecimal) row[1];
+            breakdown.put(cat, val == null ? BigDecimal.ZERO : val);
         }
         dto.setCategoryBreakdown(breakdown);
 
@@ -55,10 +57,11 @@ public class DashboardService {
             String key = y + "-" + String.format("%02d", m);
             TransactionType type = (TransactionType) row[2];
             BigDecimal sum = (BigDecimal) row[3];
+            if (sum == null) sum = BigDecimal.ZERO;
 
             chartMap.putIfAbsent(key, new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
-            if (type == TransactionType.INCOME) chartMap.get(key)[0] = sum;
-            else chartMap.get(key)[1] = sum;
+            if (type == TransactionType.INCOME) chartMap.get(key)[0] = chartMap.get(key)[0].add(sum);
+            else chartMap.get(key)[1] = chartMap.get(key)[1].add(sum);
         }
 
         List<DashboardDTO.MonthlyChartPoint> chart = new ArrayList<>();
