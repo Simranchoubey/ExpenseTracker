@@ -1,7 +1,7 @@
 # 💰 ExpenseIQ — College Expense Tracker
 
 A full-stack expense tracker built with **React + Spring Boot + MySQL** for a college project.
-No login required. Clean, dark UI with charts, budget planner, and monthly reports.
+No login required. Clean, dark UI with charts, budget planner, and monthly reports..
 
 ---
 
